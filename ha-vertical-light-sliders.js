@@ -17,12 +17,14 @@ class HaVerticalLightSliders extends LitElement {
   static get properties() {
     return {
       hass: {},
-      config: {}
+      config: {},
+      _sliderValues: { type: Object }
     };
   }
   
   constructor() {
     super();
+    this._sliderValues = {};
   }
   
   render() {
@@ -96,7 +98,7 @@ class HaVerticalLightSliders extends LitElement {
                 return stateObj ? html`
                     <div class="light" style="--light-width:${this._lightSize(positionWidth,gapWidth,panelType)};--center-slider:${this._centerSliders(panelType)};">
                       <div class="light-slider">
-                        <p class="light-brightness" data-entity="${stateObj.entity_id}" style="--show-position: ${this._showBlock(showPosition)};--light-fontSize: ${parseInt(positionWidth.replace(/px/,"")) / 4 - (parseInt(positionWidth.replace(/px/,"")) - 60) / 4}px;">${this._getLightBrightness(stateObj)}</p>
+                        <p class="light-brightness" data-entity="${stateObj.entity_id}" style="--show-position: ${this._showBlock(showPosition)};--light-fontSize: ${parseInt(positionWidth.replace(/px/,"")) / 4 - (parseInt(positionWidth.replace(/px/,"")) - 60) / 4}px;">${this._getDisplayBrightness(stateObj)}</p>
                         <div class="range-holder" style="--slider-height: ${positionHeight};--closed-color: ${this._getClosedColor(stateObj, closedColor, closedColor2)};--slider-progress: ${this._getCurrentSliderValue(stateObj)}%;">
                           <input type="range" class="${stateObj.state}" data-entity="${stateObj.entity_id}" style="--slider-width: ${positionWidth};--slider-height: ${positionHeight};--closed-color: ${this._getClosedColor(stateObj, closedColor, closedColor2)};--open-color: ${openColor};--slider-progress: ${this._getCurrentSliderValue(stateObj)}%;" .value="${this._getCurrentSliderValue(stateObj)}" @input=${e => this._sliderChangeWithUpdate(e, stateObj.entity_id)} @change=${e => this._setPosition(stateObj.entity_id, e.target.value, ent.script)}>
                         </div>
@@ -121,6 +123,9 @@ class HaVerticalLightSliders extends LitElement {
   _sliderChangeWithUpdate(event, entity_id) {
     const value = event.target.value;
     
+    // Store the current slider value for display
+    this._sliderValues = { ...this._sliderValues, [entity_id]: value };
+    
     // Update CSS variables real-time for smooth color transition
     event.target.style.setProperty('--slider-progress', `${value}%`);
     event.target.parentElement.style.setProperty('--slider-progress', `${value}%`);
@@ -133,11 +138,16 @@ class HaVerticalLightSliders extends LitElement {
     event.target.style.setProperty('--closed-color', dynamicClosedColor);
     event.target.parentElement.style.setProperty('--closed-color', dynamicClosedColor);
     
-    // Update the percentage text display in real-time
-    const percentageElement = this.shadowRoot.querySelector(`p.light-brightness[data-entity="${entity_id}"]`);
-    if (percentageElement) {
-      percentageElement.textContent = Math.round(value);
+    // Trigger a re-render to update the display
+    this.requestUpdate();
+  }
+
+  _getDisplayBrightness(stateObj) {
+    // Use stored slider value during interaction, otherwise use actual state
+    if (this._sliderValues && this._sliderValues[stateObj.entity_id] !== undefined) {
+      return Math.round(this._sliderValues[stateObj.entity_id]);
     }
+    return this._getLightBrightness(stateObj);
   }
 
   _getLightBrightness(stateObj) {
@@ -167,6 +177,13 @@ class HaVerticalLightSliders extends LitElement {
   
   _setPosition(entity_id, value, script) {
     console.log('Setting light brightness for:', entity_id, 'value:', value);
+    
+    // Clear the stored slider value since we're setting the actual value
+    if (this._sliderValues) {
+      const newValues = { ...this._sliderValues };
+      delete newValues[entity_id];
+      this._sliderValues = newValues;
+    }
     
     const brightness = Math.round(value * 255 / 100);
     

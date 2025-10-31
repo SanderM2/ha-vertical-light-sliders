@@ -1,0 +1,25 @@
+{
+  "name": "ha-vertical-light-sliders",
+  "version": "1.0.0",
+  "description": "Home Assistant vertical light sliders KNUTS custom card",
+  "keywords": [
+    "home-assistant",
+    "homeassistant",
+    "hass",
+    "lovelace",
+    "custom-cards",
+    "light",
+    "slider",
+    "brightness"
+  ],
+  "module": "ha-vertical-light-sliders.js",
+  "repository": "git@github.com:SanderM2/ha-vertical-light-sliders.git",
+  "author": "SanderM2 <sander@knuts.be>",
+  "license": "MIT",
+  "dependencies": {
+    "custom-card-helpers": "^1.6.3",
+    "home-assistant-js-websocket": "^4.4.0",
+    "lit-element": "^2.2.1",
+    "lit-html": "^1.1.2"
+  }
+}

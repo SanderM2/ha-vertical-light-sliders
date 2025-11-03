@@ -2,10 +2,9 @@
  * Author        : duytruong
  * Github        : https://github.com/SanderM2/ha-vertical-light-sliders
  * Description   : HA Vertical Light Sliders KNUTS
- * Date          : 31 Oct 2025 08:44:30+07:00
  * Based on      : github.com/DBuit/hass-smart-home-panel-card (Thanks to DBuit!)
  */
-console.info("%c [SanderM2] HA Vertical Light Sliders KNUTS  \n%c Version v1.0.0","color: red; font-weight: bold; background: black", "color: white; font-weight: bold; background: dimgray");
+console.info("%c HA Vertical Light Sliders KNUTS","color: red; font-weight: bold; background: black", "color: white; font-weight: bold; background: dimgray");
 import {
     LitElement,
     html,
@@ -17,12 +16,14 @@ class HaVerticalLightSliders extends LitElement {
   static get properties() {
     return {
       hass: {},
-      config: {}
+      config: {},
+      _sliderValues: { type: Object }
     };
   }
   
   constructor() {
     super();
+    this._sliderValues = {};
   }
   
   render() {
@@ -55,11 +56,15 @@ class HaVerticalLightSliders extends LitElement {
     
     var background = this.config.background ? this.config.background : "transparent";
     
+    // Sidebar configuration
+    var sidebarWidth = this.config.sidebarWidth ? this.config.sidebarWidth : "300px";
+    var sidebarMinWidth = this.config.sidebarMinWidth ? this.config.sidebarMinWidth : "200px";
+    
     // Theme-aware color defaults
     var sideColor1 = this.config.sideColor1 ? this.config.sideColor1 : "#ffcccc";
     var sideColor2 = this.config.sideColor2 ? this.config.sideColor2 : '#b30000';
     var switchColor = this.config.switchColor ? this.config.switchColor : sideColor2;
-    var closedColor = this.config.closedColor ? this.config.closedColor : "hsl(0, 0%, 20%)";
+    var closedColor = this.config.closedColor ? this.config.closedColor : "var(--bg-color-inactive)";
     var closedColor2 = this.config.closedColor2 ? this.config.closedColor2 : "hsl(0, 0%, 40%)";  // For >= 1%
     var openColor = this.config.openColor ? this.config.openColor : "hsl(0, 0%, 90%, 0.6)";
     var panelType = this.config.panelType;
@@ -71,7 +76,7 @@ class HaVerticalLightSliders extends LitElement {
         <ha-card>
         <div class="page" style="background:${background};">
         
-          <div class="side" style="${this._panelSize(panelType)};--show-sidebar:${this._showFlex(showSidebar)};--sideColor-1:${sideColor1};--sideColor-2:${sideColor2};">
+          <div class="side" style="${this._panelSize(panelType, sidebarWidth, sidebarMinWidth)};--show-sidebar:${this._showFlex(showSidebar)};--sideColor-1:${sideColor1};--sideColor-2:${sideColor2};">
             <div class="header">
               
             </div>
@@ -96,7 +101,7 @@ class HaVerticalLightSliders extends LitElement {
                 return stateObj ? html`
                     <div class="light" style="--light-width:${this._lightSize(positionWidth,gapWidth,panelType)};--center-slider:${this._centerSliders(panelType)};">
                       <div class="light-slider">
-                        <p class="light-brightness" data-entity="${stateObj.entity_id}" style="--show-position: ${this._showBlock(showPosition)};--light-fontSize: ${parseInt(positionWidth.replace(/px/,"")) / 4 - (parseInt(positionWidth.replace(/px/,"")) - 60) / 4}px;">${this._getLightBrightness(stateObj)}</p>
+                        <p class="light-brightness" data-entity="${stateObj.entity_id}" style="--show-position: ${this._showBlock(showPosition)};--light-fontSize: ${parseInt(positionWidth.replace(/px/,"")) / 4 - (parseInt(positionWidth.replace(/px/,"")) - 60) / 4}px;">${this._getDisplayBrightness(stateObj)}</p>
                         <div class="range-holder" style="--slider-height: ${positionHeight};--closed-color: ${this._getClosedColor(stateObj, closedColor, closedColor2)};--slider-progress: ${this._getCurrentSliderValue(stateObj)}%;">
                           <input type="range" class="${stateObj.state}" data-entity="${stateObj.entity_id}" style="--slider-width: ${positionWidth};--slider-height: ${positionHeight};--closed-color: ${this._getClosedColor(stateObj, closedColor, closedColor2)};--open-color: ${openColor};--slider-progress: ${this._getCurrentSliderValue(stateObj)}%;" .value="${this._getCurrentSliderValue(stateObj)}" @input=${e => this._sliderChangeWithUpdate(e, stateObj.entity_id)} @change=${e => this._setPosition(stateObj.entity_id, e.target.value, ent.script)}>
                         </div>
@@ -116,28 +121,43 @@ class HaVerticalLightSliders extends LitElement {
   }
   
 
-  updated() {}
+  updated() {
+    // Set dark-mode attribute based on theme
+    if (this.hass && this.hass.themes && this.hass.themes.darkMode) {
+      this.setAttribute('dark-mode', '');
+    } else {
+      this.removeAttribute('dark-mode');
+    }
+  }
   
   _sliderChangeWithUpdate(event, entity_id) {
     const value = event.target.value;
+    
+    // Store the current slider value for display
+    this._sliderValues = { ...this._sliderValues, [entity_id]: value };
     
     // Update CSS variables real-time for smooth color transition
     event.target.style.setProperty('--slider-progress', `${value}%`);
     event.target.parentElement.style.setProperty('--slider-progress', `${value}%`);
     
     // Update closedColor dynamically for 0% vs >= 1% logic
-    const closedColor = this.config.closedColor ? this.config.closedColor : "hsl(0, 0%, 20%)";
+    const closedColor = this.config.closedColor ? this.config.closedColor : "var(--bg-color-inactive)";
     const closedColor2 = this.config.closedColor2 ? this.config.closedColor2 : "hsl(0, 0%, 40%)";
     const dynamicClosedColor = parseInt(value) >= 1 ? closedColor2 : closedColor;
     
     event.target.style.setProperty('--closed-color', dynamicClosedColor);
     event.target.parentElement.style.setProperty('--closed-color', dynamicClosedColor);
     
-    // Update the percentage text display in real-time
-    const percentageElement = this.shadowRoot.querySelector(`p.light-brightness[data-entity="${entity_id}"]`);
-    if (percentageElement) {
-      percentageElement.textContent = Math.round(value);
+    // Trigger a re-render to update the display
+    this.requestUpdate();
+  }
+
+  _getDisplayBrightness(stateObj) {
+    // Use stored slider value during interaction, otherwise use actual state
+    if (this._sliderValues && this._sliderValues[stateObj.entity_id] !== undefined) {
+      return Math.round(this._sliderValues[stateObj.entity_id]);
     }
+    return this._getLightBrightness(stateObj);
   }
 
   _getLightBrightness(stateObj) {
@@ -167,6 +187,13 @@ class HaVerticalLightSliders extends LitElement {
   
   _setPosition(entity_id, value, script) {
     console.log('Setting light brightness for:', entity_id, 'value:', value);
+    
+    // Clear the stored slider value since we're setting the actual value
+    if (this._sliderValues) {
+      const newValues = { ...this._sliderValues };
+      delete newValues[entity_id];
+      this._sliderValues = newValues;
+    }
     
     const brightness = Math.round(value * 255 / 100);
     
@@ -201,12 +228,15 @@ class HaVerticalLightSliders extends LitElement {
       return count;
   }
   
-  _panelSize(panelType) {
-    let sideWidth = 40;
+  _panelSize(panelType, sidebarWidth, sidebarMinWidth) {
     if (panelType === true) {
-	  sideWidth = 30;
+      // Use percentage for panel mode
+      let sideWidth = 30;
+      return "--side-width:" + sideWidth + "%;--sidebar-width:" + sidebarWidth + ";--sidebar-min-width:" + sidebarMinWidth;
+    } else {
+      // Use fixed width for normal mode
+      return "--side-width:" + sidebarWidth + ";--sidebar-width:" + sidebarWidth + ";--sidebar-min-width:" + sidebarMinWidth;
     }
-  	return "--side-width:" + sideWidth + "px";
   }
   
   _showFlex(showSidebar) {
@@ -289,6 +319,15 @@ class HaVerticalLightSliders extends LitElement {
   
   static get styles() {
     return css`
+        :host {
+          --default-disabled: 189, 189, 189;
+          --rgb-disabled: var(--default-disabled);
+          --bg-color-inactive: rgba(var(--rgb-disabled), 0.2);
+        }
+        :host([dark-mode]) {
+          --default-disabled: 111, 111, 111;
+          --bg-color-inactive: rgba(var(--rgb-disabled), 0.1);
+        }
    		:host([is-panel]) ha-card {
       	  left: 50;
       	  top: 0;
@@ -311,12 +350,14 @@ class HaVerticalLightSliders extends LitElement {
         }
         .page > .side {
           padding: 10px;
-          width: var(--side-width)%;
+          width: var(--side-width);
+          min-width: var(--sidebar-min-width);
           display:var(--show-sidebar);
           flex-direction:column;
           background: rgb(28,122,226);
           background: linear-gradient(145deg, var(--sideColor-1) 0%, var(--sideColor-2) 90%);
           justify-content:space-between;
+          flex-shrink: 0;
         }
         .side .header {
         }
@@ -364,7 +405,7 @@ class HaVerticalLightSliders extends LitElement {
         }
         
         .page > .main {
-          width:100%;
+          flex: 1;
           overflow-x:scroll;
           padding-bottom: 0px;
           -ms-overflow-style: none;  /* IE and Edge */
@@ -477,11 +518,14 @@ class HaVerticalLightSliders extends LitElement {
           overflow: hidden;
           height: var(--slider-width);
           -webkit-appearance: none;
-          background-color: var(--closed-color);
           position: absolute;
           top: calc(50% - (var(--slider-width) / 2));
           right: calc(50% - (var(--slider-height) / 2));
         }
+        :host([dark-mode]) .range-holder input[type="range"] {
+          background-color: var(--closed-color);
+        }
+          
         .range-holder input[type="range"]::-webkit-slider-runnable-track {
           height: var(--slider-width);
           -webkit-appearance: none;

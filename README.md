@@ -12,7 +12,7 @@ A beautiful and customizable Home Assistant Lovelace card for controlling lights
 
 - 🎚️ **Vertical brightness sliders** - Intuitive light control
 - 🎨 **Dynamic colors** - Different colors for 0% vs active brightness levels
-- 🌓 **Theme aware** - Automatic dark/light mode support
+- 🌓 **Theme aware** - Automatic dark/light mode support  
 - 📱 **Mobile optimized** - Touch-friendly interactions
 - ⚡ **Real-time updates** - Instant visual feedback during sliding
 - 🔄 **External sync** - Seamless integration with HA automations
@@ -23,7 +23,7 @@ A beautiful and customizable Home Assistant Lovelace card for controlling lights
 ### HACS (Recommended)
 
 1. Open HACS in your Home Assistant
-2. Go to "Frontend" section
+2. Go to "Frontend" section  
 3. Click the "+" button
 4. Search for "HA Vertical Light Sliders KNUTS"
 5. Install the card
@@ -48,6 +48,158 @@ type: custom:ha-vertical-light-sliders
 title: "Living Room Lights"
 entities:
   - entity: light.living_room_main
+  - entity: light.living_room_accent
+  - entity: light.kitchen_island
+```
+
+### Advanced Example
+```yaml
+type: custom:ha-vertical-light-sliders
+title: "House Lighting"
+icon: mdi:lightbulb-group
+showSidebar: true
+showButton: true
+buttonText: "Dashboard" 
+buttonPath: "/lovelace/0"
+entities:
+  - entity: light.living_room
+  - entity: light.bedroom
+  - entity: light.kitchen
+closedColor: "var(--bg-color-inactive)"
+openColor: "var(--accent-color)"
+```
+
+## ⚙️ Configuration Options
+
+| Name                           | Type    | Requirement  | Description                                            | Default                |
+| ------------------------------ | ------- | ------------ | ------------------------------------------------------ | ---------------------- |
+| type                           | string  | **Required** | `custom:ha-vertical-light-sliders`                    |                        |
+| title                          | string  | **Required** | Title to show in sidebar                               |                        |
+| entities                       | list    | **Required** | Light entities to show as sliders in card             |                        |
+| &nbsp;&nbsp;- entity           | string  | **Required** | Light's `entity_id`                                    | &nbsp;                 |
+| &nbsp;&nbsp;- script           | string  | **Optional** | Script to call when light value changes               | &nbsp;                 |
+
+### 🎨 Styling Options
+
+| Name                           | Type    | Requirement  | Description                                            | Default                |
+| ------------------------------ | ------- | ------------ | ------------------------------------------------------ | ---------------------- |
+| **Sidebar** area               |         |              |                                                        |                        |
+| icon                           | string  | **Optional** | Icon to show in sidebar                                | `mdi:lightbulb-group`  |
+| iconSize                       | string  | **Optional** | Size of icon in sidebar                                | `28px`                 |
+| iconColor                      | string  | **Optional** | Color of icon in sidebar                               | `--primary-text-color` |
+| titleSize                      | string  | **Optional** | Size of title text in sidebar                         | `40px`                 |
+| titleFontColor                 | string  | **Optional** | Color of title text in sidebar                        | `--primary-text-color` |
+| countText                      | string  | **Optional** | Text to show after number of lights on                | `lights on`            |
+| countTextFontColor             | string  | **Optional** | Color of count text in sidebar                        | `--primary-text-color` |
+| closedBaseline                 | number  | **Optional** | Brightness level considered as "on"                   | `0`                    |
+
+### 🎚️ Slider Options
+
+| Name                           | Type    | Requirement  | Description                                            | Default                |
+| ------------------------------ | ------- | ------------ | ------------------------------------------------------ | ---------------------- |
+| **Light** area                 |         |              |                                                        |                        |
+| positionWidth                  | string  | **Optional** | Width of light slider                                  | `100px`                |
+| positionHeight                 | string  | **Optional** | Height of light slider                                 | `300px`                |
+| gapWidth                       | string  | **Optional** | Width of space between sliders                        | `50px`                 |
+| showSwitch                     | boolean | **Optional** | Show ON/OFF switch under every light                  | `true`                 |
+| switchWidth                    | string  | **Optional** | Width of switch button                                 | same as positionWidth  |
+| switchHeight                   | string  | **Optional** | Height of switch button                                | same as switchWidth    |
+| switchFontColor                | string  | **Optional** | Color of switch text                                   | `--primary-text-color` |
+| showName                       | boolean | **Optional** | Show/hide the name of light                           | `true`                 |
+| showPosition                   | boolean | **Optional** | Show/hide the brightness number                       | `true`                 |
+
+### 🎨 Color Options
+
+| Name                           | Type    | Requirement  | Description                                            | Default                |
+| ------------------------------ | ------- | ------------ | ------------------------------------------------------ | ---------------------- |
+| **Color** options              |         |              |                                                        |                        |
+| closedColor                    | string  | **Optional** | Color for 0% brightness (off state)                   | `var(--bg-color-inactive)` |
+| closedColor2                   | string  | **Optional** | Color for >= 1% brightness                            | `hsl(0, 0%, 40%)`      |
+| openColor                      | string  | **Optional** | Color for active part of slider                       | `hsl(0, 0%, 90%, 0.6)` |
+| switchColor                    | string  | **Optional** | Color of switch background                             | same as sideColor2     |
+
+### 🏠 Layout Options
+
+| Name                           | Type    | Requirement  | Description                                            | Default                |
+| ------------------------------ | ------- | ------------ | ------------------------------------------------------ | ---------------------- |
+| **Layout** options             |         |              |                                                        |                        |
+| panelType                      | boolean | **Optional** | Enable panel mode (responsive layout)                 | `false`                |
+| showSidebar                    | boolean | **Optional** | Show/hide sidebar completely                          | `true`                 |
+| sidebarWidth                   | string  | **Optional** | Width of sidebar                                       | `300px`                |
+| sidebarMinWidth                | string  | **Optional** | Minimum width of sidebar                               | `200px`                |
+| sideColor1                     | string  | **Optional** | Top color of sidebar gradient                          | `#ffcccc`              |
+| sideColor2                     | string  | **Optional** | Bottom color of sidebar gradient                       | `#b30000`              |
+| background                     | string  | **Optional** | Background color of entire card                        | `transparent`          |
+| showButton                     | boolean | **Optional** | Show navigation button in sidebar                      | `false`                |
+| buttonText                     | string  | **Optional** | Text on navigation button                              | `Home`                 |
+| buttonPath                     | string  | **Optional** | Path to navigate to when button clicked               | `/lovelace/0`          |
+| buttonService                  | string  | **Optional** | Service to call instead of navigation                 |                        |
+| buttonData                     | string  | **Optional** | Data for service call                                  |                        |
+| buttonFontColor                | string  | **Optional** | Color of button text                                   | `--primary-text-color` |
+
+## 🎨 Theme Support
+
+This card automatically adapts to your Home Assistant theme:
+
+- **Light Mode**: Optimized colors and contrast for light themes
+- **Dark Mode**: Automatically adjusts opacity and colors for dark themes  
+- **Custom Themes**: Uses theme CSS variables for consistent styling
+
+The card uses `var(--bg-color-inactive)` by default, which automatically provides the correct colors for both light and dark modes, matching other Home Assistant components like Mushroom cards.
+
+## 💡 For Lights
+
+Your lights should support the standard Home Assistant light services:
+- `light.turn_on` with brightness parameter
+- `light.turn_off`
+
+The card works with any light entity that supports brightness control.
+
+## 🎯 Usage Tips
+
+1. **Real-time feedback**: The sliders show immediate visual feedback while dragging
+2. **External updates**: If lights are changed via other methods, sliders update automatically  
+3. **Touch friendly**: Optimized for both desktop and mobile use
+4. **Theme matching**: Colors automatically match your HA theme
+5. **Performance**: Smooth animations without impacting system performance
+
+## 📱 Responsive Design
+
+The card adapts to different screen sizes:
+- **Desktop**: Full sidebar with sliders  
+- **Tablet**: Responsive layout with panel mode
+- **Mobile**: Optimized touch targets and spacing
+
+## 🔧 Troubleshooting
+
+### Sliders not visible
+- Check that `closedColor` has enough contrast with your background
+- Try using `var(--bg-color-inactive)` for automatic theme colors
+
+### Lights not responding  
+- Verify light entities support brightness control
+- Check Home Assistant logs for service call errors
+
+### Theme colors not working
+- Ensure you're using CSS variables like `var(--bg-color-inactive)`
+- Clear browser cache after theme changes
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Credits
+
+Originally based on the vertical slider cover card concept. Completely rewritten and optimized specifically for Home Assistant light control.
+
+---
+
+**Repository**: https://github.com/SanderM2/ha-vertical-light-sliders
+
+[releases-shield]: https://img.shields.io/github/release/SanderM2/ha-vertical-light-sliders.svg?style=for-the-badge
+[releases]: https://github.com/SanderM2/ha-vertical-light-sliders/releases
+[license-shield]: https://img.shields.io/github/license/SanderM2/ha-vertical-light-sliders.svg?style=for-the-badge  
+[maintenance-shield]: https://img.shields.io/badge/maintainer-SanderM2-blue.svg?style=for-the-badge
   - entity: light.living_room_accent
   - entity: light.kitchen_counter
 ```
